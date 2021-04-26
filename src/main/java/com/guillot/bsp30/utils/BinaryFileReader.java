@@ -1,20 +1,3 @@
-/*
-* Copyright (C) 2019 Pierre Guillot
-* This file is part of BSP30 library.
-*
-* BSP30 library is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Lesser General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* BSP30 library is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Lesser General Public License for more details.
-*
-* You should have received a copy of the GNU Lesser General Public License
-* along with Way.  If not, see <https://www.gnu.org/licenses/>.
-*/
 package com.guillot.bsp30.utils;
 
 import java.io.DataInputStream;
@@ -22,74 +5,135 @@ import java.io.IOException;
 import java.io.InputStream;
 
 
+/**
+ * Read binary files (by Java Monkey Engine)
+ * 
+ * @author Tim Biedert
+ */
 public class BinaryFileReader {
 
     private byte[] data;
 
-    private int offset = 0;
+    private int index = 0;
 
-    public BinaryFileReader(InputStream inputStream) throws IOException {
-        DataInputStream dataInputStream = new DataInputStream(inputStream);
-        data = new byte[dataInputStream.available()];
-        dataInputStream.readFully(data);
-        dataInputStream.close();
+    /*********************************************************************************************************
+     * BinaryFileReader() - Constructor
+     * 
+     * @param is The InputStream of the file to load
+     ********************************************************************************************************/
+    public BinaryFileReader(InputStream is) {
+        try {
+            DataInputStream dis = new DataInputStream(is); // Open file as DataInputStream
+            this.data = new byte[dis.available()]; // Allocate memory for file
+            dis.readFully(this.data); // Read the file completely into memory
+            dis.close(); // Close the inut stream
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    public byte readByte() {
-        return data[offset++];
-    }
-
+    /*********************************************************************************************************
+     * readByteAsInt() - Read one byte from the data array and return it as Integer. Increase file index by one.
+     * 
+     * @return The read byte as an int
+     ********************************************************************************************************/
     public int readByteAsInt() {
-        return readByte() & 0xFF;
+        int b = (this.data[this.index] & 0xFF); // Get byte
+        this.index++; // Increase index
+
+        return b;
     }
 
+    /*********************************************************************************************************
+     * readByte() - Read one byte from the data array and return it
+     * 
+     * @return
+     ********************************************************************************************************/
+    public byte readByte() {
+        this.index++;
+        return this.data[this.index - 1];
+    }
+
+    /*********************************************************************************************************
+     * readShort() - Read two bytes from the data array and generate a short. Return it as Integer and increase file index by one.
+     * 
+     * @return The read short as an int
+     ********************************************************************************************************/
     public int readShort() {
-        int byte1 = readByteAsInt();
-        int byte2 = readByteAsInt() << 8;
+        int s1 = (this.data[this.index] & 0xFF); // Get byte one
+        int s2 = (this.data[this.index + 1] & 0xFF) << 8; // Get byte two
+        this.index += 2; // Increase index
 
-        return byte1 | byte2;
+        return (s1 | s2);
     }
 
+    /*********************************************************************************************************
+     * readSignedShort() - Read two bytes from the data array and generate a short. Return it as Integer and increase file index by one.
+     * 
+     * @return The read short as an int
+     ********************************************************************************************************/
     public int readSignedShort() {
-        int byte1 = readByteAsInt();
-        int byte2 = readByte() << 8;
+        int s1 = (this.data[this.index] & 0xFF); // Get byte one
+        int s2 = (this.data[this.index + 1]) << 8; // Get byte two
+        this.index += 2; // Increase index
 
-        return byte1 | byte2;
+        return (s1 | s2);
     }
 
+    /*********************************************************************************************************
+     * readInt() - Read 4 bytes from the data array and generate an Integer. Increase file index by four.
+     * 
+     * @return The read int
+     ********************************************************************************************************/
     public int readInt() {
-        int byte1 = readByteAsInt();
-        int byte2 = readByteAsInt() << 8;
-        int byte3 = readByteAsInt() << 16;
-        int byte4 = readByteAsInt() << 24;
+        int i1 = (this.data[this.index] & 0xFF); // Get byte one
+        int i2 = (this.data[this.index + 1] & 0xFF) << 8; // Get byte two
+        int i3 = (this.data[this.index + 2] & 0xFF) << 16; // Get byte three
+        int i4 = (this.data[this.index + 3] & 0xFF) << 24; // Get byte four
+        this.index += 4; // Increase index
 
-        return byte1 | byte2 | byte3 | byte4;
+        return (i1 | i2 | i3 | i4);
     }
 
+    /*********************************************************************************************************
+     * readFloat() - Read 4 bytes from the data array and generate a float. Increase file index by four.
+     * 
+     * @return The read float
+     ********************************************************************************************************/
     public float readFloat() {
-        return Float.intBitsToFloat(readInt());
+        return Float.intBitsToFloat(this.readInt()); // Get float from int
     }
 
+    /*********************************************************************************************************
+     * readString() - Read some number of bytes from the data array and return a String. Increase file index by number of characters read.
+     * 
+     * @return The read string
+     ********************************************************************************************************/
     public String readString(int length) {
-        for (int i = 0; i < length; i++) {
-            if (data[offset + i] == (byte) 0) {
-                length = i;
-                break;
+        // Look for zero terminated string from byte array
+        for (int i = this.index; i < this.index + length; i++) {
+            if (this.data[i] == (byte) 0) {
+                String s = new String(this.data, this.index, i - this.index);
+                this.index += length;
+                return s;
             }
         }
 
-        String result = new String(data, offset, length);
-        offset += length;
-        return result;
+        String s = new String(this.data, this.index, length);
+        this.index += length;
+        return s;
     }
 
-    public int getOffset() {
-        return offset;
-    }
-
-    public void setOffset(int offset) {
-        if (offset >= 0 && offset <= data.length) {
-            this.offset = offset;
+    /*********************************************************************************************************
+     * setOffset() - Sets the file index to the new offset-
+     * 
+     * @param newOffset The new byte offset in the file
+     ********************************************************************************************************/
+    public void setOffset(int newOffset) {
+        if (newOffset < 0 || newOffset > this.data.length) {
+            return;
         }
+
+        this.index = newOffset;
     }
 }

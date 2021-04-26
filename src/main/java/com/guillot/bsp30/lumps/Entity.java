@@ -20,6 +20,7 @@ package com.guillot.bsp30.lumps;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -162,7 +163,7 @@ public class Entity {
     @Override
     public String toString() {
         String result = "";
-        for (var entry : ePairs.entrySet()) {
+        for (Entry<String, String> entry : ePairs.entrySet()) {
             result += String.format(EPair.FORMAT, entry.getKey(), entry.getValue());
         }
 

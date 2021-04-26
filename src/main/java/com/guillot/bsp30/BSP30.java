@@ -23,6 +23,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 
 import org.joml.Vector3f;
 
@@ -338,7 +339,7 @@ public class BSP30 {
     }
 
     public void printEntities(PrintStream outStream) {
-        for (var entry : entities.entrySet()) {
+        for (Entry<String, List<Entity>> entry : entities.entrySet()) {
             if (entry.getValue() != null) {
                 entry.getValue().forEach(entity -> outStream.println(entity));
             }
