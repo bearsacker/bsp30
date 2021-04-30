@@ -106,8 +106,12 @@ public class BSP30 {
             // Textures
             file.setOffset(header.getLump(LumpType.LUMP_TEXTURES).getOffset());
             int numTextures = file.readInt();
-            file.setOffset(header.getLump(LumpType.LUMP_TEXTURES).getOffset() + numTextures * 4 + 4);
+            ArrayList<Integer> offsetsTextures = new ArrayList<>();
             for (int i = 0; i < numTextures; i++) {
+                offsetsTextures.add(header.getLump(LumpType.LUMP_TEXTURES).getOffset() + file.readInt());
+            }
+            for (Integer offsetTexture : offsetsTextures) {
+                file.setOffset(offsetTexture);
                 textures.add(new Texture(file));
             }
 
@@ -138,18 +142,25 @@ public class BSP30 {
             for (int i = 0; i < numSurfEdges; i++) {
                 int index = file.readInt();
                 if (index < 0) {
-                    index = -index;
-                    surfEdges.add(edges.get(index).getSecondVertex());
+                    surfEdges.add(edges.get(-index).getSecondVertex());
                 } else {
                     surfEdges.add(edges.get(index).getFirstVertex());
                 }
+            }
+
+            // Lighting
+            file.setOffset(header.getLump(LumpType.LUMP_LIGHTING).getOffset());
+            int sizeLightData = header.getLump(LumpType.LUMP_LIGHTING).getLength();
+            lightData = new byte[sizeLightData];
+            for (int i = 0; i < sizeLightData; i++) {
+                lightData[i] = file.readByte();
             }
 
             // Faces
             file.setOffset(header.getLump(LumpType.LUMP_FACES).getOffset());
             int numFaces = header.getLump(LumpType.LUMP_FACES).getLength() / Face.SIZE;
             for (int i = 0; i < numFaces; i++) {
-                faces.add(new Face(file, planes, surfEdges, textureInfos));
+                faces.add(new Face(file, planes, surfEdges, textureInfos, lightData));
             }
 
             // MarkSurfaces
@@ -194,14 +205,6 @@ public class BSP30 {
             visData = new byte[sizeVisData];
             for (int i = 0; i < sizeVisData; i++) {
                 visData[i] = file.readByte();
-            }
-
-            // Lighting
-            file.setOffset(header.getLump(LumpType.LUMP_LIGHTING).getOffset());
-            int sizeLightData = header.getLump(LumpType.LUMP_LIGHTING).getLength();
-            lightData = new byte[sizeLightData];
-            for (int i = 0; i < sizeLightData; i++) {
-                lightData[i] = file.readByte();
             }
 
             makeBSPTree();
@@ -321,7 +324,7 @@ public class BSP30 {
     private int globUsage(PrintStream outStream, String item, int itemStorage, int maxStorage) {
         float percentage = (itemStorage * 100) / (float) maxStorage;
 
-        outStream.format("%-12s     [variable]    %7d/%-7d  (%4.1f%%)", item, maxStorage, maxStorage, percentage);
+        outStream.format("%-12s     [variable]    %7d/%-7d  (%4.1f%%)", item, itemStorage, maxStorage, percentage);
         if (percentage > 80.0) {
             outStream.print("    VERY FULL!");
         } else if (percentage > 95.0) {

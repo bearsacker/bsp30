@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.guillot</groupId>
 	<artifactId>bsp30</artifactId>
-	<version>1.0.0</version>
+	<version>1.1.0</version>
 	<name>BSP30</name>
 	<description>Java BSP v30 loader (Half-Life Engine map file)</description>
 

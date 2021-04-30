@@ -19,6 +19,7 @@ package com.guillot.bsp30.lumps;
 
 import java.util.ArrayList;
 
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 import com.guillot.bsp30.utils.BinaryFileReader;
@@ -46,6 +47,18 @@ public class TextureInfo {
         this.distT = file.readFloat();
         this.texture = textures.get(file.readInt());
         this.flags = file.readInt();
+    }
+
+    public Vector2f computeTextureCoords(Vector3f vertex) {
+        Vector2f coords = new Vector2f();
+
+        coords.x = s.dot(vertex) + distS;
+        coords.x /= texture.getWidth();
+
+        coords.y = t.dot(vertex) + distT;
+        coords.y /= texture.getHeight();
+
+        return coords;
     }
 
     public Vector3f getS() {

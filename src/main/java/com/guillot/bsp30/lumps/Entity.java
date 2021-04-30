@@ -147,11 +147,13 @@ public class Entity {
         if (ePairs.containsKey(key)) {
             Vector4f vector = new Vector4f();
             String[] values = ePairs.get(key).split(" ");
-            if (values != null && values.length == 4) {
+            if (values != null && values.length >= 3 && values.length <= 4) {
                 vector.w = Float.parseFloat(values[0]);
                 vector.x = Float.parseFloat(values[1]);
                 vector.y = Float.parseFloat(values[2]);
-                vector.z = Float.parseFloat(values[3]);
+                if (values.length == 4) {
+                    vector.z = Float.parseFloat(values[3]);
+                }
 
                 return vector;
             }
